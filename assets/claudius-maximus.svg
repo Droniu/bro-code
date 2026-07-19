@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 240" role="img" aria-label="Your laptop isn't broken — your compose file is a war crime. ~ Claudius Maximus, 2026">
+  <rect width="880" height="240" rx="16" fill="#0d1117" stroke="#30363d" stroke-width="2"/>
+  <text x="52" y="118" font-family="Georgia, serif" font-size="130" fill="#21262d">&#8220;</text>
+  <text x="440" y="102" text-anchor="middle" font-family="Impact, 'Arial Black', sans-serif" font-size="42" fill="#f0f6fc" letter-spacing="1">YOUR LAPTOP ISN'T BROKEN —</text>
+  <text x="440" y="156" text-anchor="middle" font-family="Impact, 'Arial Black', sans-serif" font-size="42" fill="#f0f6fc" letter-spacing="1">YOUR COMPOSE FILE IS A WAR CRIME.</text>
+  <text x="812" y="206" text-anchor="end" font-family="Georgia, serif" font-style="italic" font-size="22" fill="#8b949e">~ Claudius Maximus, 2026</text>
+</svg>
