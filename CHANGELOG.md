@@ -12,8 +12,8 @@ conventions. Versions are per-plugin semver from each plugin's `plugin.json`.
 
 - Initial release: architect mode (positions → anonymized rebuttal →
   synthesis), review mode (findings → dedupe → optional refutation), chair/
-  seat separation, capability discovery, read-only sandboxing for all
-  repo-access seats, degraded-roster reporting.
+  seat separation, capability discovery, full repo read access for every
+  seat (enforced read-only), degraded-roster reporting.
 
 ## ship
 

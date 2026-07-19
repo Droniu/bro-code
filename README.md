@@ -46,9 +46,9 @@ What the side-by-side "ask three models" tools don't do, this does:
 
 Requires: nothing. Benefits from: [Codex CLI](https://github.com/openai/codex)
 and/or [Grok CLI](https://docs.x.ai), installed and authenticated on your own
-accounts. Repo-access seats read your code and send what they read to their
-provider — read the skill's data-exposure section before pointing it at
-anything sensitive.
+accounts. Every council seat has full read access to your repository and
+sends what it reads to its provider — read the skill's data-exposure section
+before pointing it at anything sensitive.
 
 ## ship
 

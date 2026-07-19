@@ -25,7 +25,7 @@ When the Claude seat runs the **same model as the chair**, say so in the roster 
 
 - **Provider CLIs are all optional.** The council runs with whoever is present: [Codex CLI](https://github.com/openai/codex) (`codex`), [Grok CLI](https://docs.x.ai) (`grok`). Each must be installed and authenticated by you, on your account, at your cost. The Claude seat needs no extra install.
 - **A council of one is a degraded council.** With only the Claude seat available, the chair and the sole seat are the same model family. Say so plainly in the roster — the user is getting one family's opinion, not cross-model disagreement, which is the entire value proposition.
-- **Data exposure:** every seat with repository access reads your code and sends what it reads to that provider's API. Read-only sandboxing stops writes to your disk; it is **not** a privacy control. Do not run repo-access seats on codebases you may not share with those vendors.
+- **Data exposure:** every seat reads your code and sends what it reads to that provider's API. Read-only sandboxing stops writes to your disk; it is **not** a privacy control. Do not convene the council on codebases you may not share with those vendors.
 - **Cost:** every consultation is a real session against each provider's quota. See the sessions table at the bottom. Announce before an expensive fan-out.
 
 ## Models and reasoning effort
@@ -62,13 +62,12 @@ Claude always chairs. Its seat runs unless `--only` excludes `claude`. Report th
 
 ## Step 2 — Sandboxing (non-negotiable)
 
-Every seat with repository access runs **read-only**: reads everything, writes nothing.
+Every seat has **full repository read access**, enforced read-only: reads everything, writes nothing.
 
 | Provider | Enforcement |
 |---|---|
 | **codex** | `-s read-only` |
 | **grok** | `--sandbox read-only` (dedicated filesystem/network sandbox profile) plus `--permission-mode plan` |
-| anything without a sandbox flag | brief-only: context inlined into the prompt, no repo access |
 
 `--permission-mode plan` on Grok is a **permission gate, not a sandbox** — on its own it does not enforce read-only filesystem access. The `--sandbox read-only` profile is the enforcement; plan mode just suppresses write-tool approval churn on top of it. Never describe plan mode alone as sandboxing.
 
@@ -104,8 +103,7 @@ Required contents:
 
 - The user's question **verbatim**. Do not paraphrase — your framing is a bias vector.
 - Relevant constraints from CLAUDE.md/AGENTS.md and the actual stack
-- For repo-access providers: *"Explore the repository before answering."*
-- For brief-only providers: the code/context they need, inlined
+- *"Explore the repository before answering."* — every seat has full repo read access
 - *"Respond in a neutral technical register."*
 
 That last line matters: if a provider's global config (`~/.codex/AGENTS.md`, grok custom rules) applies a persona, you would otherwise measure manufactured attitude and score it as genuine disagreement.
