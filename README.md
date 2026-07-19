@@ -1,5 +1,9 @@
 # bro-code
 
+<p align="center">
+  <img src="assets/claudius-maximus.svg" alt="&quot;Your laptop isn't broken — your compose file is a war crime.&quot; ~ Claudius Maximus, 2026" width="760">
+</p>
+
 Claude Code plugins by [Droniu](https://github.com/Droniu). The headliner is
 **bro-mode** — an output style that makes your AI pair programmer talk like
 your best bro. Three workflow plugins ride along, built and dogfooded daily.

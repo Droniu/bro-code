@@ -6,6 +6,7 @@
     "default": true,
     "MD013": false, // line length — tables and long shell lines exceed 80
     "MD024": { "siblings_only": true }, // per-plugin CHANGELOG sections repeat "0.1.0"/"Added" under different parents
+    "MD033": false, // README uses inline HTML for the centered meme image
     "MD032": false, // established style: lists directly under bold pseudo-headings
     "MD036": false, // established style: bold text as sub-headings
     "MD060": false  // established style: compact table pipes
