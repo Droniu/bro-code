@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "bro-code",
-  "description": "droniu's Claude Code toolkit — multi-model council, end-to-end ship workflow, CodeRabbit triage, and the bro persona",
+  "description": "droniu's Claude Code toolkit — the bro persona for your pair programmer, plus a multi-model council, end-to-end ship workflow, and CodeRabbit triage",
   "owner": {
     "name": "Droniu",
     "email": "droniu@droniu.dev"
