@@ -65,15 +65,21 @@ Explicitly invoked only — it never auto-triggers.
 
 ## coderabbit-triage
 
-Works through every unresolved CodeRabbit comment on the current PR:
-classify (fix / defer / reject), apply fixes grouped by theme, reply to and
-resolve every thread, verify before pushing. Skeptical by design — it
-re-reads the cited code before accepting any suggestion. Not affiliated with
-CodeRabbit; it triages CodeRabbit's output.
+Works through every unresolved CodeRabbit comment on the current PR.
+Skeptical by design — it re-reads the cited code before accepting any
+suggestion. Not affiliated with CodeRabbit; it triages CodeRabbit's output.
+
+Two modes:
+
+- **Default** — classifies every comment (fix / defer / reject), prints the
+  verdict table, and stops. You decide what happens next.
+- **`--autofix`** — applies the verdicts end-to-end: fixes committed by
+  theme, every thread replied to and resolved, verify gate before push.
 
 ```text
 /plugin install coderabbit-triage@bro-code
-/coderabbit-triage:coderabbit-triage
+/coderabbit-triage:coderabbit-triage            # triage only — verdicts, then your call
+/coderabbit-triage:coderabbit-triage --autofix  # verdicts + fixes + thread resolution
 ```
 
 ## bro-mode — the fun one

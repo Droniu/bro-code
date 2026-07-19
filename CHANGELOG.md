@@ -31,8 +31,9 @@ conventions. Versions are per-plugin semver from each plugin's `plugin.json`.
 
 #### Added
 
-- Initial release: gather → classify (fix/defer/reject) → themed fixes →
-  reply-and-resolve workflow for CodeRabbit PR comments.
+- Initial release: gather → classify (fix/defer/reject) verdict table.
+  Default mode stops at the verdicts and awaits instructions; `--autofix`
+  applies fixes grouped by theme and replies to / resolves every thread.
   `disable-model-invocation: true`.
 
 ## bro-mode

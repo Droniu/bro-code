@@ -1,12 +1,24 @@
 ---
 name: coderabbit-triage
-description: Triage and fix CodeRabbit review comments on the current PR. Use when the user says "do coderabbit", "address coderabbit", "fix coderabbit comments", "/coderabbit", or otherwise asks to work through CodeRabbit feedback on a pull request.
+description: Triage and fix CodeRabbit review comments on the current PR. By default it only prints a verdict table and awaits instructions; pass "--autofix" to apply the verdicts end-to-end. Use when the user says "do coderabbit", "address coderabbit", "fix coderabbit comments", "/coderabbit", or otherwise asks to work through CodeRabbit feedback on a pull request.
 disable-model-invocation: true
 ---
 
 # CodeRabbit triage workflow
 
-Walk through every unresolved CodeRabbit comment on the current PR, decide what to do with each, apply fixes grouped by theme, and resolve the threads. Do **not** blindly accept CodeRabbit's suggestions — it hallucinates, over-engineers, and recommends unmaintained packages. Verify every claim against the actual code before acting.
+Walk through every unresolved CodeRabbit comment on the current PR, decide what to do with each, and — depending on the mode — apply fixes grouped by theme and resolve the threads. Do **not** blindly accept CodeRabbit's suggestions — it hallucinates, over-engineers, and recommends unmaintained packages. Verify every claim against the actual code before acting.
+
+## Modes
+
+- **Default (triage-only):** run steps 1–2, print the verdict table, then
+  **stop**. Do not edit, reply, resolve, or push — await the user's
+  instructions. They may accept the verdicts as-is, override some ("apply
+  1 and 3, skip 2"), or take over entirely.
+- **`--autofix`:** run the full pipeline (steps 1–6) without stopping.
+  Print the verdict table first for the record, then immediately apply the
+  `fix` items, reply to and resolve every thread per its verdict, verify,
+  and push. Treat the user saying "autofix", "just go", or "auto" as this
+  mode even without the flag.
 
 ## 1. Gather the comments
 
@@ -62,9 +74,13 @@ Output the classification as a compact table before doing any edits:
 3  backend/config/settings.py:88      defer    valid but scope creep — open follow-up
 ```
 
-Wait for the user to confirm the classification before editing — unless the user has explicitly said "just go" / "auto" / similar.
+**Default mode ends here.** Output the table and await the user's
+instructions. In `--autofix` mode, continue to step 3 without waiting.
 
 ## 3. Apply fixes — grouped by theme, one commit per group
+
+Run steps 3–6 only in `--autofix` mode, or after the user's go-ahead in
+default mode — applying any verdict overrides they gave before acting.
 
 Cluster the `fix` items by concern (e.g. "terraform tagging", "type-safety in loading flow", "doc cleanup"). One commit per cluster, not one commit per comment, not one giant commit mixing themes.
 
