@@ -1,0 +1,15 @@
+{
+  // MD040 (fenced code blocks must declare a language) stays ON. The rules
+  // below are disabled because they conflict with the established style of
+  // the skill and style documents in this repo.
+  "config": {
+    "default": true,
+    "MD013": false, // line length — tables and long shell lines exceed 80
+    "MD024": { "siblings_only": true }, // per-plugin CHANGELOG sections repeat "0.1.0"/"Added" under different parents
+    "MD032": false, // established style: lists directly under bold pseudo-headings
+    "MD036": false, // established style: bold text as sub-headings
+    "MD060": false  // established style: compact table pipes
+  },
+  "globs": ["**/*.md"],
+  "ignores": ["node_modules/**"]
+}

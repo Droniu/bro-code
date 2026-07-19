@@ -1,0 +1,36 @@
+name: validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Validate marketplace and plugin manifests
+        run: |
+          claude plugin validate .claude-plugin/marketplace.json --strict
+          for p in council ship coderabbit-triage bro-mode; do
+            claude plugin validate "plugins/$p" --strict
+          done
+
+      - name: Portability scan — no machine-specific facts in published plugins
+        run: |
+          if grep -rEn '/Users/|/home/[a-z]|[A-Za-z]:\\\\Users|linear\.app/[a-z]|atlassian\.net' plugins/; then
+            echo "Machine- or workspace-specific facts found in published plugin content" >&2
+            exit 1
+          fi
+
+      - name: markdownlint
+        run: npx --yes markdownlint-cli2 "**/*.md"

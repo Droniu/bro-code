@@ -1,0 +1,11 @@
+{
+  "name": "coderabbit-triage",
+  "version": "0.1.0",
+  "description": "Triage CodeRabbit review comments on the current PR: classify fix/defer/reject, apply themed fixes, reply to and resolve every thread",
+  "author": {
+    "name": "Droniu",
+    "email": "droniu@droniu.dev"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/Droniu/bro-code"
+}

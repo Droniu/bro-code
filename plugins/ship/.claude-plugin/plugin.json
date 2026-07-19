@@ -1,0 +1,11 @@
+{
+  "name": "ship",
+  "version": "0.1.0",
+  "description": "Ship current work end-to-end: branch off the correct base, run the project's verify gate, commit per repo conventions, push, open a PR",
+  "author": {
+    "name": "Droniu",
+    "email": "droniu@droniu.dev"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/Droniu/bro-code"
+}

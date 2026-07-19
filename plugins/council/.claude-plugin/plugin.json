@@ -1,0 +1,11 @@
+{
+  "name": "council",
+  "version": "0.1.0",
+  "description": "Multi-model council: fan a question or diff out to Codex, Grok, and a sandboxed Claude seat, run an anonymized rebuttal round, synthesize with disagreements surfaced",
+  "author": {
+    "name": "Droniu",
+    "email": "droniu@droniu.dev"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/Droniu/bro-code"
+}

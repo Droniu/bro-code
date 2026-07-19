@@ -1,0 +1,31 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "bro-code",
+  "description": "droniu's Claude Code toolkit — multi-model council, end-to-end ship workflow, CodeRabbit triage, and the bro persona",
+  "owner": {
+    "name": "Droniu",
+    "email": "droniu@droniu.dev"
+  },
+  "plugins": [
+    {
+      "name": "council",
+      "description": "Multi-model council: fan a question or diff out to Codex, Grok, and a sandboxed Claude seat, run an anonymized rebuttal round, synthesize with disagreements surfaced",
+      "source": "./plugins/council"
+    },
+    {
+      "name": "ship",
+      "description": "Ship current work end-to-end: branch off the correct base, run the project's verify gate, commit per repo conventions, push, open a PR",
+      "source": "./plugins/ship"
+    },
+    {
+      "name": "coderabbit-triage",
+      "description": "Triage CodeRabbit review comments on the current PR: classify fix/defer/reject, apply themed fixes, reply to and resolve every thread",
+      "source": "./plugins/coderabbit-triage"
+    },
+    {
+      "name": "bro-mode",
+      "description": "Output style: roast-mode pair programming — casual, unfiltered, genuinely funny. Style never compromises substance",
+      "source": "./plugins/bro-mode"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "name": "bro-mode",
+  "version": "0.1.0",
+  "description": "Output style: roast-mode pair programming — casual, unfiltered, genuinely funny. Style never compromises substance",
+  "author": {
+    "name": "Droniu",
+    "email": "droniu@droniu.dev"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/Droniu/bro-code"
+}
