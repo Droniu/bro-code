@@ -15,6 +15,10 @@ Four plugins, separately installable, all MIT.
 
 Each plugin installs independently — take only what you want.
 
+Commands below are shown short-form (`/council`, `/ship`) — that works whenever
+no other skill claims the same name. The fully-qualified forms
+(`/council:council`, `/ship:ship`) always work and disambiguate collisions.
+
 ## council — the flagship
 
 A multi-model council for architecture questions and code review. Fans your
@@ -40,8 +44,8 @@ What the side-by-side "ask three models" tools don't do, this does:
 
 ```text
 /plugin install council@bro-code
-/council:council architect "should we split this service?"
-/council:council review --deep
+/council architect "should we split this service?"
+/council review --deep
 ```
 
 Requires: nothing. Benefits from: [Codex CLI](https://github.com/openai/codex)
@@ -60,7 +64,7 @@ Explicitly invoked only — it never auto-triggers.
 
 ```text
 /plugin install ship@bro-code
-/ship:ship
+/ship
 ```
 
 ## coderabbit-triage
@@ -78,8 +82,8 @@ Two modes:
 
 ```text
 /plugin install coderabbit-triage@bro-code
-/coderabbit-triage:coderabbit-triage            # triage only — verdicts, then your call
-/coderabbit-triage:coderabbit-triage --autofix  # verdicts + fixes + thread resolution
+/coderabbit-triage            # triage only — verdicts, then your call
+/coderabbit-triage --autofix  # verdicts + fixes + thread resolution
 ```
 
 ## bro-mode — the fun one
