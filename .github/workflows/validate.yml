@@ -21,14 +21,36 @@ jobs:
       - name: Validate marketplace and plugin manifests
         run: |
           claude plugin validate .claude-plugin/marketplace.json --strict
-          for p in council ship coderabbit-triage bro-mode; do
-            claude plugin validate "plugins/$p" --strict
-          done
 
-      - name: Portability scan — no machine-specific facts in published plugins
+          # Validation targets come from the marketplace itself: a plugin can
+          # never be registered and then silently left unvalidated. Marketplace
+          # --strict passes over a missing source dir and never opens skills,
+          # so each plugin directory is validated on its own.
+          jq -r '.plugins[].source' .claude-plugin/marketplace.json \
+            | sed 's#^\./##;s#/$##' | sort > /tmp/listed.txt
+          while read -r src; do
+            if [ ! -d "$src" ]; then
+              echo "marketplace.json lists '$src' but that directory does not exist" >&2
+              exit 1
+            fi
+            claude plugin validate "$src" --strict
+          done < /tmp/listed.txt
+
+          # ...and the reverse: a plugin directory nobody registered.
+          ls -d plugins/*/ | sed 's#/$##' | sort > /tmp/present.txt
+          if ! diff -u /tmp/listed.txt /tmp/present.txt; then
+            echo "plugins/ and marketplace.json disagree (-marketplace +on disk)" >&2
+            exit 1
+          fi
+
+      - name: Portability scan — no machine-specific facts anywhere in the repo
         run: |
-          if grep -rEn '/Users/|/home/[a-z]|[A-Za-z]:\\\\Users|linear\.app/[a-z]|atlassian\.net' plugins/; then
-            echo "Machine- or workspace-specific facts found in published plugin content" >&2
+          # Scans the whole repo, not just plugins/: README, CHANGELOG and docs
+          # leak machine paths just as easily. This workflow is excluded because
+          # it necessarily contains the patterns it searches for.
+          if grep -rEn '/Users/|/home/[a-z]|[A-Za-z]:\\Users|/private/tmp|claude-501|linear\.app/[a-z]|atlassian\.net' \
+               --exclude-dir=.git --exclude=validate.yml .; then
+            echo "Machine- or workspace-specific facts found in repo content" >&2
             exit 1
           fi
 
