@@ -6,7 +6,7 @@
 
 Claude Code plugins by [Droniu](https://github.com/Droniu). The headliner is
 **bro-mode** — an output style that makes your AI pair programmer talk like
-your best bro. Three workflow plugins ride along, built and dogfooded daily.
+your best bro. Four workflow plugins ride along, built and dogfooded daily.
 
 > **Alpha honesty:** everything here is `0.x`. Interfaces, flags, and skill
 > names may change between minor versions. Pin nothing to muscle memory yet.
@@ -104,6 +104,9 @@ What the side-by-side "ask three models" tools don't do, this does:
 - **Refutation by default** — in review mode, findings go to a *different*
   model instructed to refute them, with `refuted: true` as the default,
   because AI review's dominant failure mode is confident false positives.
+- **Preflighted seats** — every provider gets a one-turn smoke call before the
+  roster is announced, so a broken CLI or an exhausted quota is caught up
+  front instead of halfway through a long run.
 - **Honest degradation** — no provider CLIs installed? It says "degraded
   council, single model family" instead of pretending.
 
@@ -118,6 +121,31 @@ and/or [Grok CLI](https://docs.x.ai), installed and authenticated on your own
 accounts. Every council seat has full read access to your repository and
 sends what it reads to its provider — read the skill's data-exposure section
 before pointing it at anything sensitive.
+
+### consult — one model, your session's access
+
+When you want one specific model's take instead of a whole council:
+
+```text
+/plugin install consult@bro-code
+/consult gpt-6 astra (codex) on this issue
+/consult grok on why the build broke — let it try fixing it
+/consult sonnet on whether SSE or websockets fits here
+```
+
+The consultant — Codex, Grok, or a Claude subagent — gets a self-contained
+brief (it never saw your conversation) and the **same access as your
+session**: same repo, its own full config and MCP servers, network, and your
+current permission mode mapped onto its CLI. Plan mode stays read-only, auto
+mode auto-approves inside a workspace sandbox, bypass stays bypass. Where your
+session would ask you first, a headless consultant is denied rather than
+silently upgraded.
+
+Unlike council's read-only seats, a consultant in a write-capable mode *can*
+change files; its brief says not to unless you asked ("let it try fixing
+it"), and anything it changes in the working tree is reported back.
+Follow-ups resume the same consultant session. Same data-exposure rule as
+council: Codex and Grok send what they read to their providers.
 
 ### ship
 
