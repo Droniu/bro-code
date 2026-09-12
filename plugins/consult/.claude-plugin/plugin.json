@@ -1,0 +1,11 @@
+{
+  "name": "consult",
+  "version": "0.1.0",
+  "description": "Consult one other model — Codex, Grok, or a Claude model — on the issue at hand, with the same access as the current session",
+  "author": {
+    "name": "Droniu",
+    "email": "droniu@droniu.dev"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/Droniu/bro-code"
+}

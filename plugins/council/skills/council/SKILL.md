@@ -1,6 +1,6 @@
 ---
 name: council
-description: Convene a multi-model council for adversarial code review or architecture brainstorming. Fans a question or diff out to every available model CLI (Codex, Grok) plus a sandboxed Claude seat in parallel, runs an anonymized rebuttal or refutation round, and synthesizes with disagreements surfaced. Use when the user types /council, or asks for a second opinion, multi-model review, architecture critique, or "what would other models say".
+description: Convene a multi-model council for adversarial code review or architecture brainstorming. Fans a question or diff out to every available model CLI (Codex, Grok) plus a sandboxed Claude seat in parallel, runs an anonymized rebuttal or refutation round, and synthesizes with disagreements surfaced. Use when the user types /council, or asks for a multi-model review, cross-model disagreement, or an architecture critique from several models at once. For one named model, use consult instead.
 ---
 
 # Council
@@ -17,9 +17,21 @@ Claude Code chairs. Every model — including Claude — argues from a seat with
 /council review --base main          review against a base branch
 ```
 
-Flags: `--only codex,claude` select seats — the chair always remains; omitting `claude` from the list drops Claude's seat too · `--model <m>` override the Codex model · `--claude-model <opus|sonnet|haiku>` override the Claude seat model (default `opus`) · `--effort <low|medium|high|xhigh|max>` override fan-out effort (clamped per provider).
+Flags: `--only codex,claude` select seats — the chair always remains; omitting `claude` from the list drops Claude's seat too · `--model <m>` override the Codex model · `--claude-model <opus|sonnet|haiku>` override the Claude seat model (default `opus`) · `--grok-model <slug>` pin the Grok seat model (default: the CLI's own default) · `--effort <low|medium|high|xhigh|max>` override fan-out effort (clamped per provider).
 
 When the Claude seat runs the **same model as the chair**, say so in the roster — a sibling instance holds no stake in the outcome, but the chair reasons the way its sibling argues; weigh cross-family agreement (codex+grok) a notch higher that run.
+
+**Users name seats by model nickname**, not by provider — "drop grok, just fable and astra". Resolve nicknames before anything else:
+
+| The user says | Seat | Resolve against |
+|---|---|---|
+| `opus`, `sonnet`, `haiku`, `fable` | claude | the `--claude-model` value |
+| `astra`, `sol`, `terra`, `luna`, `gpt-*`, `codex` | codex | `.models[].slug` in `~/.codex/models_cache.json` (`gpt-6 astra` → `gpt-6-astra`) |
+| `grok*` | grok | `grok models` |
+
+A nickname you cannot resolve is a question for the user, never a silent substitution into somebody else's default.
+
+**One model is not a council — that is `/consult`.** A single named model with your session's access and no rebuttal round is the lighter tool; reach for the council when you want cross-family disagreement.
 
 ## Prerequisites, cost, and data exposure
 
@@ -36,29 +48,41 @@ When the Claude seat runs the **same model as the chair**, say so in the roster 
 Discover capabilities instead of assuming them:
 
 - **Codex model**: read the `model` key from `~/.codex/config.toml` if the file exists; otherwise omit `-m` and let the CLI use its default. Report whichever applies in the roster.
-- **Grok model**: the CLI offers no model flag on all accounts; confirm the served model post-hoc from `.modelUsage` in the response envelope and report it.
+- **Grok model**: `grok models` prints the catalog and marks the default; pin one with `-m <slug>`. Confirm the served model post-hoc from `.modelUsage` in the response envelope and report that.
 - **Claude seat**: default `opus`, overridden only by `--claude-model`. **Never let the seat inherit the session model.** Workflow's `agent()` defaults to the main-loop model when `model:` is omitted — pass `model:` explicitly on every seat call, both modes. "The user is running X, so the seat should be X" is exactly the drift this rule exists to stop.
 
-**Effort is set per stage, not per mode**: the fan-out (where quality is decided) runs one notch above rebuttal/refutation (many small judgment calls; diminishing returns). Known-accepted ranges as of the verified CLI versions below: codex `low…xhigh`, grok `low|medium|high`, claude `low…max`. If a CLI rejects an effort value, step down one notch and note the clamp in the roster. **Never leave effort unset** — unset effort means unpredictable cost and non-comparable answers.
+**Effort is set per stage, not per mode**: the fan-out (where quality is decided) runs one notch above rebuttal/refutation (many small judgment calls; diminishing returns). Known-accepted ranges as of the verified CLI versions below: codex `low…ultra` (per-model `supported_reasoning_levels`), grok `none…xhigh` **only where the model supports effort at all**, claude `low…max`. Grok silently ignores `--reasoning-effort` when its catalog marks the model `supports_reasoning_effort: false` — true of API-key accounts today. Check `models_cache.json` beside the `user` layer path in `grok inspect --json` → `.configSources.layers`, and report "effort: n/a" rather than claiming a level you did not get. If a CLI rejects an effort value, step down one notch and note the clamp in the roster. **Never leave effort unset** — unset effort means unpredictable cost and non-comparable answers.
 
 | Stage | Codex | Grok | Claude |
 |---|---|---|---|
 | Fan-out (positions / findings) | `xhigh` | `high` | `xhigh` |
 | Rebuttal / refutation | `high` | `medium` | `high` |
 
-Ceiling asymmetry is real (claude reaches `max`, codex `xhigh`, grok `high`): when providers disagree, some of that gap is intensity rather than judgment. Say so instead of scoring it as pure signal.
+Ceiling asymmetry is real (claude reaches `max`, codex `xhigh`, grok `xhigh` where effort applies at all): when providers disagree, some of that gap is intensity rather than judgment. Say so instead of scoring it as pure signal.
 
-## Step 1 — Detect providers
+## Step 1 — Detect providers, then smoke-test them
 
-Always run this first. The council runs with whoever is present; never fail because someone is missing.
+`command -v` plus an auth file proves nothing: a CLI can be installed, authenticated, and still fail every call — a broken helper binary, an exhausted quota, a revoked token. **Preflight every seat with a real call, and let the answer decide the roster.** Two one-turn `low`-effort sessions buy you a roster that is actually true.
+
+Run each block as its **own** Bash call — one long chained command trips the permission splitter and stalls the whole detection step waiting for approval.
 
 ```bash
-SP="<session scratchpad dir>/council"; mkdir -p "$SP"
-echo "codex:  $(command -v codex >/dev/null && echo yes || echo no) auth=$(python3 -c "import json;print(json.load(open('$HOME/.codex/auth.json'))['auth_mode'])" 2>/dev/null || echo none)"
-echo "grok:   $(command -v grok  >/dev/null && echo yes || echo no) auth=$([ -f "$HOME/.grok/auth.json" ] && echo yes || echo no)"
+SP="<session scratchpad dir>/council"; mkdir -p "$SP"; command -v codex; command -v grok
 ```
 
-Claude always chairs. Its seat runs unless `--only` excludes `claude`. Report the roster with model and effort before doing work.
+```bash
+timeout 90 codex exec --ephemeral -s read-only -c model_reasoning_effort=low \
+  -o "$SP/smoke-codex.txt" < /dev/null "Reply with exactly: OK"; echo "codex exit=$?"; cat "$SP/smoke-codex.txt"
+```
+
+```bash
+timeout 90 grok -p "Reply with exactly: OK" --output-format json --max-turns 1 > "$SP/smoke-grok.json"; echo "grok exit=$?"
+python3 -c "import json;d=json.load(open('$SP/smoke-grok.json'));print(d.get('stopReason'),'|',(d.get('text') or d.get('message') or '')[:120])"
+```
+
+A seat that does not come back `OK` **is not on the roster**. Name it and its reason in one line and convene without it. Two seats announced honestly beat three announced and two retracted mid-run.
+
+Claude chairs and needs no smoke test. Its seat runs unless `--only` excludes `claude`.
 
 ## Step 2 — Sandboxing (non-negotiable)
 
@@ -67,15 +91,15 @@ Every seat has **full repository read access**, enforced read-only: reads everyt
 | Provider | Enforcement |
 |---|---|
 | **codex** | `-s read-only` |
-| **grok** | `--sandbox read-only` (dedicated filesystem/network sandbox profile) plus `--permission-mode plan` |
+| **grok** | `--sandbox read-only` (dedicated filesystem/network sandbox profile) |
 
-`--permission-mode plan` on Grok is a **permission gate, not a sandbox** — on its own it does not enforce read-only filesystem access. The `--sandbox read-only` profile is the enforcement; plan mode just suppresses write-tool approval churn on top of it. Never describe plan mode alone as sandboxing.
+Grok's `--permission-mode` flag only applies `default` and `bypassPermissions`; `plan` is accepted and silently ignored (verified on grok 0.2.103), so it is no longer passed — it never gated anything. `--sandbox read-only` is the entire enforcement. Note also that a headless grok seat **ends its whole run** (`stopReason: "Cancelled"`) the first time it reaches for a command needing approval: report that seat as degraded rather than empty.
 
 A read-only sandbox stops the model *writing to your disk*. It does **not** stop a vendor transmitting what it reads — see the data-exposure note above. Different threat models; never conflate them.
 
 ## Parsing provider output — the shapes differ
 
-Envelope shapes verified 2026-07-19 against codex-cli 0.144.2 and grok 0.2.103. These CLIs version independently of this skill — treat envelope drift as an expected failure mode, not a surprise.
+Envelope shapes verified 2026-09-12 against codex-cli 0.153.2 and grok 0.2.103. These CLIs version independently of this skill — treat envelope drift as an expected failure mode, not a surprise.
 
 | Provider | Where the object actually is |
 |---|---|
@@ -137,9 +161,11 @@ codex exec --ephemeral -s read-only -C "$REPO" $CODEX_MODEL_ARGS \
 ```
 
 ```bash
-# grok — repo access, read-only sandbox. Real object lands at .structuredOutput
-grok -p "$(cat "$SP/brief.md")" --cwd "$REPO" \
-  --sandbox read-only --permission-mode plan \
+# grok — repo access, read-only sandbox. $GROK_MODEL_ARGS is "-m <slug>" when a
+# model is pinned, else empty. Drop --reasoning-effort when effort is n/a.
+# Real object lands at .structuredOutput
+grok -p "$(cat "$SP/brief.md")" --cwd "$REPO" $GROK_MODEL_ARGS \
+  --sandbox read-only \
   --reasoning-effort "${GROK_EFFORT:-high}" \
   --output-format json --json-schema "$(cat "$SP/arch-schema.json")" \
   --max-turns 15 > "$SP/grok.json"
@@ -149,10 +175,17 @@ grok -p "$(cat "$SP/brief.md")" --cwd "$REPO" \
 Claude's seat — spawn via the Workflow tool when available: agent() declares both
 model and effort, and its schema option returns a validated object:
 
-  agent(<contents of $SP/brief.md>, {model: 'opus', effort: 'xhigh', schema: <arch-schema>})
+  agent(<the literal text of $SP/brief.md>, {model: 'opus', effort: 'xhigh', schema: <arch-schema>})
 
-Inline the brief text into the script (or guard args: workflow args can arrive
-JSON-stringified — use `typeof args === 'string' ? args : args.brief`).
+Read the brief and inline its text when you author the script. NEVER pass it
+through workflow args: they can arrive JSON-stringified or empty, and a seat
+handed an empty brief burns a full run refusing to invent a position from
+nothing. Assert the brief is non-empty before launching, and treat a seat that
+reports an empty task as a re-launch, not as a position.
+
+Tell the seat to write its answer to $SP/claude.json as well as returning it.
+Task notifications truncate long results, and digging the full object back out
+of the workflow journal costs a round trip you do not need.
 
 Fallback when Workflow is unavailable: the Agent tool. It has NO effort
 parameter — flag the seat as "effort: session default (uncontrolled)" in the
@@ -217,7 +250,7 @@ You are the validation layer and the chair, not a vote counter and not a competi
     "claim":{"type":"string"},
     "failure_scenario":{"type":"string"},
     "confidence":{"type":"string","enum":["high","medium","low"]}
-  },"required":["file","severity","claim","failure_scenario","confidence"],
+  },"required":["file","line","severity","category","claim","failure_scenario","confidence"],
   "additionalProperties":false}}},
 "required":["findings"],"additionalProperties":false}
 ```
@@ -227,19 +260,20 @@ You are the validation layer and the chair, not a vote counter and not a competi
 ### 3b. Fan out — each in its native idiom
 
 ```bash
-# codex — native review command (-m IS supported on the review subcommand)
-codex exec review --uncommitted -C "$REPO" $CODEX_MODEL_ARGS \
+# codex — plain `exec`, never `exec review`: that subcommand rejects -C, refuses
+# --base alongside a prompt, and ignores --output-schema (it answers in prose).
+codex exec --ephemeral -s read-only -C "$REPO" $CODEX_MODEL_ARGS \
   -c model_reasoning_effort="${EFFORT:-xhigh}" \
   --output-schema "$SP/find-schema.json" -o "$SP/codex-find.json" \
-  < /dev/null "Report findings matching the schema. failure_scenario must be concrete."
+  < "$SP/review-brief.md"
 ```
 
-Use `--base <branch>` or `--commit <sha>` instead of `--uncommitted` when the user specified a target.
+The diff target belongs in the brief, not in flags: *"Review the uncommitted changes (`git diff HEAD`)"*, or `git diff main...HEAD` when the user named a base. Append the schema to the brief too — a seat that loses the flag still answers in shape.
 
 ```bash
 # grok — reads the diff itself, read-only sandbox
 grok -p "Review the uncommitted changes in this repository. Report findings matching the schema. failure_scenario must be concrete." \
-  --cwd "$REPO" --sandbox read-only --permission-mode plan \
+  --cwd "$REPO" $GROK_MODEL_ARGS --sandbox read-only \
   --reasoning-effort "${GROK_EFFORT:-high}" \
   --output-format json --json-schema "$(cat "$SP/find-schema.json")" \
   --max-turns 20 > "$SP/grok-find.json"
@@ -276,6 +310,8 @@ Rank: co-discovered + survived refutation → single-source + survived → refut
 
 You have the final say. If a finding survived every model but you can read the code and see it is wrong, kill it and explain. Three models agreeing is not evidence; the code is evidence.
 
+**Keep the process out of the deliverable.** The roster, the degraded seats, and the retry story belong in the chat with the user — never in a PR description, commit message, or review comment. When the user does want provenance in a shipped artifact, name the models and nothing else.
+
 ## Cost
 
 Every consultation is a real session doing real work against each provider's quota.
@@ -290,8 +326,10 @@ Full roster is 3 seats — codex, grok, claude. Sessions per run:
 | `review --deep` | 3 + one per critical/high finding |
 
 - `--deep` is the expensive path — never make it the default
-- `--max-turns` on Grok bounds runaway exploration; Codex is bounded by effort
-- Announce before an expensive fan-out: *"3 seats, repo access, ~2 min, 6 sessions. Go?"*
+- **Cap every seat.** Grok takes `--max-turns`; wrap codex in `timeout 900`; give the Claude seat an explicit turn budget in its brief plus a wall-clock watchdog. An uncapped seat can run for hours and return nothing, turning a three-seat council into one.
+- **Say how long it will take.** A seat with repo access runs for minutes, not seconds, and a full architect run with the rebuttal round can take half an hour. Quote that up front — half an hour is a different product from "a couple of minutes".
+- Announce before an expensive fan-out: *"3 seats, repo access, ~30 min, 6 sessions. Go?"*
+- **Report what it cost.** Grok's envelope carries `total_cost_usd` and `usage`, codex reports tokens. Add one spend line to the synthesis for a metered run, and write "cost not reported" rather than implying it was free.
 - Narrow with `--only` or `--effort medium` when the question doesn't warrant full depth
 
 ## Failure handling
@@ -300,7 +338,10 @@ Providers fail independently and that is fine. A dead provider is a smaller coun
 
 - Missing/unauthenticated → skip, name it in the roster
 - Non-JSON despite schema → parse what you can (see the defensive-parsing rule), report the provider as degraded, never fabricate its position
-- Grok auth errors like `invalid_grant: Refresh token has been revoked` can be triggered by token rotation racing under parallel fan-out → tell the user to re-run `grok login`
-- Timeout → report partial council; do not silently drop a member
+- **Grok quota, not auth.** `429`, `subscription:free-usage-exhausted`, `You've reached your free Grok Build usage limit`, or `reauthable: false` all mean the seat is out of budget. `grok login` fixes none of them — report "grok seat out of quota", give the reset window if the error carries one, and convene without it. One repo-reading seat can eat most of a free daily allowance in a single run.
+- **Grok auth routing.** Invoke `grok` by name so a shell function that exports `XAI_API_KEY` or relocates `GROK_HOME` still applies; calling a resolved binary path silently drops to the free tier. `grok models` prints the route in use, and `.modelUsage` names the model actually served — `grok-4.5` served as `grok-4.5-build-free` is a degraded seat, not the model you asked for.
+- Genuine auth errors (`invalid_grant: Refresh token has been revoked`) can be triggered by token rotation racing a parallel fan-out → re-run `grok login`
+- **Schema-valid is not evidence of work.** A seat can return well-formed JSON without ever opening the repo. No `file:line` citation, or a single-turn finish, means it did not read your code — mark it degraded and say which.
+- Timeout → report partial council; do not silently drop a member. A late seat that lands after you called it dead reopens the synthesis; never publish a verdict a background seat is still contradicting
 
 Never invent a provider's opinion. If a provider did not answer, it has no position — say that.

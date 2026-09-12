@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "bro-code",
-  "description": "droniu's Claude Code toolkit — the bro persona for your pair programmer, plus a multi-model council, end-to-end ship workflow, and CodeRabbit triage",
+  "description": "droniu's Claude Code toolkit — the bro persona for your pair programmer, plus a multi-model council, single-model consults, end-to-end ship workflow, and CodeRabbit triage",
   "owner": {
     "name": "Droniu",
     "email": "droniu@droniu.dev"
@@ -11,6 +11,11 @@
       "name": "council",
       "description": "Multi-model council: fan a question or diff out to Codex, Grok, and a sandboxed Claude seat, run an anonymized rebuttal round, synthesize with disagreements surfaced",
       "source": "./plugins/council"
+    },
+    {
+      "name": "consult",
+      "description": "Consult one other model — Codex, Grok, or a Claude model — on the issue at hand, with the same access as the current session",
+      "source": "./plugins/consult"
     },
     {
       "name": "ship",
